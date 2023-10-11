@@ -10,4 +10,5 @@ remappings = [
   'oz-upgradeable=lib/openzeppelin-contracts-upgradeable/',
   'oz-regular=lib/openzeppelin-contracts/',
   '@xerc20=lib/xerc20/solidity',
+  '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/'
 ]
