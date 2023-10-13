@@ -24,11 +24,6 @@ contract XERC20Factory is IXERC20Factory {
     XERC20LockboxFactory public lockboxFactory;
 
     /**
-     * @notice The address of the old factory
-     */
-    XERC20Factory public immutable OLD_FACTORY;
-
-    /**
      * @notice Address of the xerc20 maps to the address of its lockbox if it has one
      */
     mapping(address => address) internal _lockboxRegistry;
@@ -43,9 +38,8 @@ contract XERC20Factory is IXERC20Factory {
      */
     EnumerableSet.AddressSet internal _xerc20RegistryArray;
 
-    constructor(address _oldFactory) {
+    constructor() {
         lockboxFactory = new XERC20LockboxFactory();
-        OLD_FACTORY = XERC20Factory(_oldFactory);
     }
 
     /**
@@ -159,9 +153,6 @@ contract XERC20Factory is IXERC20Factory {
 
     function _getLockboxForXERC20(address _xerc20) internal view returns (address _lockbox) {
         _lockbox = _lockboxRegistry[_xerc20];
-        if (_lockbox == address(0) && address(OLD_FACTORY) != address(0)) {
-            _lockbox = OLD_FACTORY.lockboxRegistry(_xerc20);
-        }
     }
 
     /**
@@ -172,8 +163,7 @@ contract XERC20Factory is IXERC20Factory {
      */
 
     function _isRegisteredXERC20(address _xerc20) internal view returns (bool _result) {
-        _result = EnumerableSet.contains(_xerc20RegistryArray, _xerc20)
-            || (address(OLD_FACTORY) != address(0) && OLD_FACTORY.isRegisteredXERC20(_xerc20));
+        _result = EnumerableSet.contains(_xerc20RegistryArray, _xerc20);
     }
 
     /**
@@ -186,16 +176,6 @@ contract XERC20Factory is IXERC20Factory {
     function _isRegisteredLockbox(address _lockbox) internal view returns (bool _result) {
         if (EnumerableSet.contains(_lockboxRegistryArray, _lockbox)) {
             _result = true;
-        } else if (address(OLD_FACTORY) != address(0)) {
-            try OLD_FACTORY.isRegisteredLockbox(_lockbox) returns (bool _isRegistered) {
-                _result = _isRegistered;
-            } catch {
-                // If the function fails then we are going to the first factory where the function does not exist
-                // Get the xerc20 of the lockbox and check in the old factory if there is a lockbox registered to it
-                address _xerc20 = address(XERC20Lockbox(payable(_lockbox)).XERC20());
-
-                _result = OLD_FACTORY.lockboxRegistry(_xerc20) == _lockbox;
-            }
         }
     }
 
