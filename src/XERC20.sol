@@ -37,8 +37,8 @@ contract XERC20 is Initializable, ERC20Upgradeable, Ownable2StepUpgradeable, IXE
      * @param _burningLimits The owner of this contract
      */
     function initialize(
-        string _name,
-        string _symbol,
+        string memory _name,
+        string memory _symbol,
         address _factory,
         address _owner,
         address[] memory _bridges,
@@ -49,7 +49,7 @@ contract XERC20 is Initializable, ERC20Upgradeable, Ownable2StepUpgradeable, IXE
         require(_bridges.length == _burningLimits.length, "!burnlen");
         __ERC20_init(_name, _symbol);
         __Ownable2Step_init();
-        _setOwner(_owner);
+        __Ownable_init(_owner);
         FACTORY = _factory;
 
         for (uint256 i; i < _bridges.length; i++) {
@@ -307,40 +307,6 @@ contract XERC20 is Initializable, ERC20Upgradeable, Ownable2StepUpgradeable, IXE
             _useMinterLimits(_amount, _caller);
         }
         _mint(_user, _amount);
-    }
-
-    /**
-     * @notice Callback called after a token transfer.
-     *
-     * @param from   The account sending tokens.
-     * @param to     The account receiving tokens.
-     * @param amount The amount of tokens being transfered.
-     */
-    function _afterTokenTransfer(address from, address to, uint256 amount)
-        internal
-        override(ERC20Upgradeable, ERC20VotesUpgradeable)
-    {
-        super._afterTokenTransfer(from, to, amount);
-    }
-
-    /**
-     * @notice Internal mint function.
-     *
-     * @param to     The account receiving minted tokens.
-     * @param amount The amount of tokens to mint.
-     */
-    function _mint(address to, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        super._mint(to, amount);
-    }
-
-    /**
-     * @notice Internal burn function.
-     *
-     * @param account The account that tokens will be burned from.
-     * @param amount  The amount of tokens that will be burned.
-     */
-    function _burn(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        super._burn(account, amount);
     }
 
     // ============ Upgrade Gap ============

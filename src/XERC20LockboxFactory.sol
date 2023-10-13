@@ -3,9 +3,10 @@ pragma solidity ^0.8.19;
 
 import {TransparentUpgradeableProxy} from "oz-regular/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IXERC20Factory} from "@xerc20/interfaces/IXERC20Factory.sol";
-import {XERC20Lockbox} from "@xerc20/contracts/XERC20Lockbox.sol";
 import {CREATE3} from "solmate/utils/CREATE3.sol";
+
 import {IXERC20LockboxFactory} from "./interfaces/IXERC20LockboxFactory.sol";
+import {XERC20Lockbox} from "./XERC20Lockbox.sol";
 
 contract XERC20LockboxFactory is IXERC20LockboxFactory {
     IXERC20Factory public immutable XERC20_FACTORY;
