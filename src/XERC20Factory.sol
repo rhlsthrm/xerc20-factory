@@ -78,7 +78,7 @@ contract XERC20Factory is IXERC20Factory {
         if (XERC20(_xerc20).owner() != msg.sender) revert IXERC20Factory_NotOwner();
         if (_getLockboxForXERC20(_xerc20) != address(0)) revert IXERC20Factory_LockboxAlreadyDeployed();
 
-        _lockbox = _deployLockbox(_xerc20, _baseToken, _isNative);
+        _lockbox = _deployUpgradeableLockbox(msg.sender, _xerc20, _baseToken, _isNative);
 
         emit LockboxDeployed(_lockbox);
     }
@@ -255,15 +255,28 @@ contract XERC20Factory is IXERC20Factory {
         XERC20(_xerc20).transferOwnership(_owner);
     }
 
-    function _deployLockbox(address _xerc20, address _baseToken, bool _isNative)
+    function _deployUpgradeableLockbox(address _owner, address _xerc20, address _baseToken, bool _isNative)
         internal
         returns (address payable _lockbox)
     {
-        bytes32 _salt = keccak256(abi.encodePacked(_xerc20, _baseToken, msg.sender));
+        bytes32 _salt = keccak256(abi.encodePacked(_xerc20, _baseToken, _owner));
+        bytes32 _implementationSalt = keccak256(abi.encodePacked(_salt, "implementation"));
+
+        // deploy implementation
         bytes memory _creation = type(XERC20Lockbox).creationCode;
         bytes memory _bytecode = abi.encodePacked(_creation, abi.encode(_xerc20, _baseToken, _isNative));
 
-        _lockbox = payable(CREATE3.deploy(_salt, _bytecode, 0));
+        address _implementation = payable(CREATE3.deploy(_implementationSalt, _bytecode, 0));
+
+        // deploy proxy with create3
+        bytes memory _initData =
+            abi.encodeWithSelector(XERC20Lockbox.initialize.selector, _xerc20, _baseToken, _isNative);
+        bytes memory _bytecodeProxy = abi.encodePacked(
+            type(TransparentUpgradeableProxy).creationCode, abi.encode(_implementation, _owner, _initData)
+        );
+
+        // set lockbox to proxy address
+        _lockbox = payable(CREATE3.deploy(_salt, _bytecodeProxy, 0));
 
         XERC20(_xerc20).setLockbox(address(_lockbox));
         EnumerableSet.add(_lockboxRegistryArray, _lockbox);
